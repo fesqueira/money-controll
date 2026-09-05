@@ -2,11 +2,13 @@ package com.example.money_manager.service;
 
 import com.example.money_manager.dto.ExpenseRequest;
 import com.example.money_manager.dto.ExpenseResponse;
+import com.example.money_manager.exception.ExpenseNotFoundException;
 import com.example.money_manager.model.Expense;
 import com.example.money_manager.repository.ExpenseRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -50,6 +52,36 @@ public class ExpenseService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public ExpenseResponse findById(Long id){
+        Expense expense = repository.findById(id)
+                .orElseThrow(() -> new ExpenseNotFoundException(id));
+
+        return toResponse(expense);
+
+    }
+
+    public ExpenseResponse update(Long id, ExpenseRequest request){
+        Expense expense = repository.findById(id)
+                .orElseThrow(() -> new ExpenseNotFoundException(id));
+
+
+        expense.setDescription(request.description());
+        expense.setAmount(request.amount());
+        expense.setCategory(request.category());
+        expense.setDate(request.date());
+        Expense updated = repository.save(expense);
+
+        return this.toResponse(updated);
+
+    }
+
+    public void delete(Long id){
+        if (!repository.existsById(id)){
+            throw new ExpenseNotFoundException(id);
+        }
+        repository.deleteById(id);
     }
 
 }
